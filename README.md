@@ -21,8 +21,8 @@ from DmxOscServer import DmxOscServer
 
 server = DmxOscServer()
 
-# Register a 3 channel Fixture at address 0 at universe 0 which will execute my_rgb_handler when called
-@server.new_fixture(0, 0, 3)
+# Define a 3 channel Fixture at address 0 at universe 0 which will execute my_rgb_handler when called
+@server.define_fixture(0, 0, 3)
 def my_rgb_handler(fixture, address, *args):
     fixture.values[address] = args[0]
     print (fixture.values)

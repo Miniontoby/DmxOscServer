@@ -194,3 +194,5 @@ install.sh
 build.sh
 upload.sh
 docs/build.sh
+tmp_tries.py
+
