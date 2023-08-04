@@ -157,12 +157,12 @@ class DmxOscServer():
     :param str ip: The IP address to listen on
     :param int port: The Port to listen on
     """
-    self.__osc_server = ThreadingOSCUDPServer((ip, port), self.__dispatcher)
+    self.__osc_server = ThreadingOSCUDPServer((ip, port), self._dispatcher)
     print ("Serving on {}".format(self.__osc_server.server_address))
     self.__osc_server.serve_forever()
 
   def __setattr__(self, name, value):
-    if name not in ["__fixtures","__dispatcher","__osc_server"]: pass
+    if name not in ["__fixtures","_dispatcher","__osc_server"]: pass
     elif name not in self.__dict__: pass
     else: raise AttributeError("Can't modify {}".format(name))
     super().__setattr__(name, value)
