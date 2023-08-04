@@ -24,10 +24,18 @@ server = DmxOscServer()
 # Define a 3 channel Fixture at address 0 at universe 0 which will execute my_rgb_handler when called
 @server.define_fixture(0, 0, 3)
 def my_rgb_handler(fixture, address, *args):
-    fixture.values[address] = args[0]
-    print (fixture.values)
+    print ("{} got {}".format(address, args))
 
 server.run()
+```
+
+To make the define more readable, you can use the argument names
+
+```py
+# Define a 3 channel Fixture at address 0 at universe 0 which will execute my_rgb_handler when called
+@server.define_fixture(universe=0, starting_addr=0, channels=3)
+def my_rgb_handler(fixture, address, *args):
+    print ("{} has been set to {}".format(address, args))
 ```
 
 
@@ -44,8 +52,7 @@ It is also possible to use the `Fixture` class and the `add_fixture` method
 from DmxOscServer import DmxOscServer, Fixture
 
 def my_rgb_handler(fixture, address, *args):
-    fixture.values[address] = args[0]
-    print (fixture.values)
+    print ("{} has been set to {}".format(address, args))
 
 server = DmxOscServer()
 server.add_fixture(Fixture(0, 0, 3, my_rgb_handler)) # Register a 3 channel Fixture at address 0 at universe 0
@@ -63,6 +70,25 @@ server.add_fixtures(
 )
 ```
 
+
+You can use the `fixture.values` property to see all the current values
+
+```py
+@server.define_fixture(0, 0, 3)
+def my_rgb_handler(fixture, address, *args):
+    print (fixture.values)
+```
+
+
+# The handler
+
+The handler receives a call when a message is received for that fixture
+Arguments: `(fixture, address, *args)`
+- `fixture` is the fixture, so you have a reference
+- `address` is the message address (it starts at the starting_address, so use `address - fixture.starting_addr` if you want to have the internal address)
+- `*args` are the args of the message. It is almost always 1 int going from 0 to 1, so you can just use `args[0]` in your code and multiply it by your max value
+
+The handler should never receive an address out of its address range, if the fixture is called correctly
 
 # More Documentation
 

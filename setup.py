@@ -7,7 +7,7 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 
 setup(
     name="DmxOscServer",
-    version="1.0.2",
+    version="1.0.3",
     description="A Python Lib to create a DMX compatible OSC server with handlers",
     long_description=long_description,
     long_description_content_type="text/markdown",
