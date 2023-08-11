@@ -6,6 +6,15 @@ It allows you to register fixtures are the wanted universe, starting address and
 You will also be able to add an handler which will be called when a message is received for that fixture.
 
 
+Originally designed for QLC+, but it should work with any program that sends to the `/<universe>/dmx/<addr>` path
+
+It can receive single argument messages, like `/<universe>/dmx/<addr> <value>` (so you can set the channels to 3 and do channel 1 for red, 2 for green and 3 for blue)
+
+It can also receive an array argument, like `/<universe>/dmx/<addr> [<R>, <G>, <B>]`
+
+And it can also receive 3 arguments, like `/<universe>/dmx/<addr> <R> <G> <B>`
+
+
 ## Installation
 
 ```bash
@@ -46,6 +55,16 @@ server.run("10.10.123.5", 1234) # Will listen on 10.10.123.5:1234
 ```
 
 
+If your addresses receive arrays or multiple args, add the `channel_as_array=True` argument
+
+```py
+# Define a 3 channel array based Fixture at address 0 at universe 0 which will execute my_rgb_handler when called
+@server.define_fixture(universe=0, starting_addr=0, channels=3, channel_as_array=True)
+def my_rgb_handler(fixture, address, *args):
+    print ("{} has been set to {}".format(address, args))
+```
+
+
 It is also possible to use the `Fixture` class and the `add_fixture` method
 
 ```py
@@ -55,7 +74,8 @@ def my_rgb_handler(fixture, address, *args):
     print ("{} has been set to {}".format(address, args))
 
 server = DmxOscServer()
-server.add_fixture(Fixture(0, 0, 3, my_rgb_handler)) # Register a 3 channel Fixture at address 0 at universe 0
+server.add_fixture(Fixture(0, 0, 3, my_rgb_handler)) # Register a 3 channel not array based Fixture at address 0 at universe 0
+server.add_fixture(Fixture(0, 3, 3, my_rgb_handler, True)) # Register a 3 channel array based Fixture at address 0 at universe 0
 ```
 
 
@@ -65,8 +85,8 @@ And for the `add_fixture` method, you can also add multiple fixtures at once usi
 from DmxOscServer import DmxOscServer, Fixture
 server = DmxOscServer()
 server.add_fixtures(
-    Fixture(0, 0, 3, my_rgb_handler), # Register a 3 channel Fixture at address 0 of universe 0
-    Fixture(0, 3, 3, my_rgb_handler), # Register a 3 channel Fixture at address 3 of universe 0
+    Fixture(0, 0, 3, my_rgb_handler), # Register a 3 channel not array based Fixture at address 0 of universe 0
+    Fixture(0, 3, 3, my_rgb_handler, True), # Register a 3 channel array based Fixture at address 3 of universe 0
 )
 ```
 

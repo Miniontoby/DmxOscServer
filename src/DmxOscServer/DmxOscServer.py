@@ -22,7 +22,11 @@ class DmxOscServer():
       matches = search(r"^\/([0-9]+)\/dmx\/([0-9]+)", address) # /<universe>/dmx/<addr>
       universe,address = int(matches[1]),int(matches[2])
       for fixture in self.list_fixtures(universe):
-        if address in fixture: return fixture(address, *args) # They have the __call__ set to their handler
+        if address in fixture:
+          try:
+            return fixture(address, *args) # They have the __call__ set to their handler
+          except Exception as e: print ("Exception!", e)
+      return False
 
     # Should be 'private/protected'
     self._dispatcher = Dispatcher()
@@ -87,13 +91,14 @@ class DmxOscServer():
     """
     for fixture in fixtures: self.add_fixture(fixture)
 
-  def define_fixture(self, universe, starting_addr, channels):
+  def define_fixture(self, universe, starting_addr, channels, channel_as_array=False):
     """
     Allows you to define a new fixture using a function decorator
 
     :param int universe: The universe for this Fixture
     :param int starting_addr: The starting address for this Fixture
     :param int channels: The amount of channel that this Fixture should have
+    :param bool channels_as_array: Specify is the channels will receive arrays
     :raises TypeError: If the fixture is not a Fixture
     :raises ValueError: If the address of the fixture is already used in the universe
 
@@ -112,7 +117,7 @@ class DmxOscServer():
            print(fixture.values)
     """
     def decorator(func):
-      result = Fixture(universe, starting_addr, channels, func)
+      result = Fixture(universe, starting_addr, channels, func, channel_as_array)
       self.add_fixture(result)
       return result
 

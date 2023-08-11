@@ -12,19 +12,40 @@ class TestDmxOscServer(unittest.TestCase):
         Test the Fixture.__str__()
         """
         fixture1 = Fixture(0, 1, 2, _)
-        self.assertEqual(fixture1.__str__(), "Fixture(universe=0, starting_addr=1, channels=2, values=[0, 0])")
+        self.assertEqual(fixture1.__str__(), "Fixture(universe=0, starting_addr=1, channels=2, channel_as_array=False, values=[0, 0])")
 
-        fixture2 = Fixture(universe=1, starting_addr=3, channels=2, handler=_)
-        self.assertEqual(fixture2.__str__(), "Fixture(universe=1, starting_addr=3, channels=2, values=[0, 0])")
+        fixture2 = Fixture(universe=1, starting_addr=3, channels=2, handler=_, channel_as_array=False)
+        self.assertEqual(fixture2.__str__(), "Fixture(universe=1, starting_addr=3, channels=2, channel_as_array=False, values=[0, 0])")
 
     def test_fixture_call(self):
         """
         Test the Fixture.__call__()
         """
-        fixture = Fixture(universe=0, starting_addr=1, channels=2, handler=_)
+        fixture = Fixture(universe=0, starting_addr=1, channels=5, handler=_)
         fixture(1, 0.1) # Call at address 1 which is the first channel
         fixture(2, 0.6) # Call at address 2
+        self.assertEqual(fixture.values, [0.1, 0.6, 0, 0, 0])
+
+    def test_fixture_call_array(self):
+        """
+        Test the Fixture.__call__() with array
+        """
+        fixture = Fixture(universe=0, starting_addr=1, channels=2, handler=_, channel_as_array=False)
+        fixture(1, [0.1, 0.6])
         self.assertEqual(fixture.values, [0.1, 0.6])
+
+        fixture = Fixture(universe=0, starting_addr=1, channels=2, handler=_, channel_as_array=True)
+        fixture(1, [0.1, 0.6])
+        fixture(2, [0.4, 0.8])
+        self.assertEqual(fixture.values, [[0.1, 0.6], [0.4, 0.8]])
+
+    def test_fixture_call_arguments(self):
+        """
+        Test the Fixture.__call__() with multiple arguments
+        """
+        fixture = Fixture(universe=0, starting_addr=1, channels=2, handler=_, channel_as_array=True)
+        fixture(1, 0.1, 0.6)
+        self.assertEqual(fixture.values, [[0.1, 0.6],[0]])
 
     def test_server_define_fixture(self):
         """
@@ -38,8 +59,16 @@ class TestDmxOscServer(unittest.TestCase):
         @server.define_fixture(universe=0, starting_addr=3, channels=2)
         def handle(): return
 
-        self.assertEqual(server.list_fixtures()[0].__str__(), "Fixture(universe=0, starting_addr=1, channels=2, values=[0, 0])")
-        self.assertEqual(server.list_fixtures()[1].__str__(), "Fixture(universe=0, starting_addr=3, channels=2, values=[0, 0])")
+        @server.define_fixture(0, 5, 2, True)
+        def handle(): return
+
+        @server.define_fixture(universe=0, starting_addr=7, channels=2, channel_as_array=True)
+        def handle(): return
+
+        self.assertEqual(server.list_fixtures()[0].__str__(), "Fixture(universe=0, starting_addr=1, channels=2, channel_as_array=False, values=[0, 0])")
+        self.assertEqual(server.list_fixtures()[1].__str__(), "Fixture(universe=0, starting_addr=3, channels=2, channel_as_array=False, values=[0, 0])")
+        self.assertEqual(server.list_fixtures()[2].__str__(), "Fixture(universe=0, starting_addr=5, channels=2, channel_as_array=True, values=[[0], [0]])")
+        self.assertEqual(server.list_fixtures()[3].__str__(), "Fixture(universe=0, starting_addr=7, channels=2, channel_as_array=True, values=[[0], [0]])")
     def test_server_add_fixture(self):
         """
         Test the server.add_fixture()
@@ -109,7 +138,7 @@ class TestDmxOscServer(unittest.TestCase):
         self.assertTrue('Address 5 is not within the address range!' in str(context.exception))
 
         # Test read-only properties
-        for prop in ["universe","starting_addr","channels","end_addr","address_range","values"]:
+        for prop in ["universe","starting_addr","channels","end_addr","address_range","channel_as_array"]:
             with self.assertRaises(AttributeError) as context: fix1.__setattr__(prop, 1)
             self.assertTrue("Can't modify {}".format(prop) in str(context.exception))
     def test_server_dispatcher(self):
@@ -119,7 +148,7 @@ class TestDmxOscServer(unittest.TestCase):
         server = DmxOscServer()
 
         @server.define_fixture(0, 1, 2)
-        def handler(fix, addr, *args): self.assertEqual(fix.__str__(), "Fixture(universe=0, starting_addr=1, channels=2, values=[0.5, 0])")
+        def handler(fix, addr, *args): self.assertEqual(fix.__str__(), "Fixture(universe=0, starting_addr=1, channels=2, channel_as_array=False, values=[0.5, 0])")
 
         msg = OscMessageBuilder("/0/dmx/1")
         msg.add_arg(0.5)
